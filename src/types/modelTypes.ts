@@ -10,6 +10,9 @@ export type PoolType = {
   is_stable: boolean;
   tvl: bigint;
   tvlUSD: number;
+  lpId: string;
+  fees24hr: number;
+  volume24hr: number;
 };
 
 export type AssetType = {

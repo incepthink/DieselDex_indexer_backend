@@ -12,6 +12,9 @@ class Pool extends Model<InferAttributes<Pool>, InferCreationAttributes<Pool>> {
   declare decimals_1: number;
   declare tvl: bigint;
   declare tvlUSD: number;
+  declare lpId: string;
+  declare fees24hr: number;
+  declare volume24hr: number;
 }
 
 export default Pool;

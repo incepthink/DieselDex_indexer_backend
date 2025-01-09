@@ -55,6 +55,9 @@ Pool.init(
     decimals_1: DataTypes.INTEGER,
     tvl: DataTypes.BIGINT,
     tvlUSD: DataTypes.FLOAT,
+    lpId: DataTypes.STRING,
+    fees24hr: DataTypes.FLOAT,
+  volume24hr: DataTypes.FLOAT,
   },
   {
     sequelize,
