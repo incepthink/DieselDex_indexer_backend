@@ -146,30 +146,62 @@ const getPoolSnapshotsById = async (
   res: Response,
   next: NextFunction
 ): Promise<any> => {
-  const timestamp24hAgo = Math.floor(Date.now() / 1000) - 24 * 60 * 60;
+  const yesterdayMidnightTimestamp = Math.floor(
+    new Date(new Date().setDate(new Date().getDate() - 1)).setHours(
+      0,
+      0,
+      0,
+      0
+    ) / 1000
+  );
+
   try {
     const id = req.params.id;
     console.log(id);
 
-    const pool_query = gql`
-        query MyQuery {
-  SwapHourly(where: {snapshot_time: {_gt: ${timestamp24hAgo.toString()}}, 
-  pool_id: {_eq: ${id}}}) {
-    asset_0_in
-    asset_0_out
-    asset_1_in
-    asset_1_out
-    count
+    const fees_query = gql`
+        query MyQuery($time: Int!) {
+  SwapDaily(where: {snapshot_time: {_gt: $time}, 
+  pool_id: {_eq: "${id}"}}) {
     feesUSD
-    id
-    pool_id
-    snapshot_time
   }
 }
       `;
-    //@ts-ignore
-    const result = await client.query(pool_query);
-    console.log(result.data.SwapHourly);
+
+    const result0 = await client.query(fees_query, {
+      time: yesterdayMidnightTimestamp,
+    });
+
+    const tvl_query = gql`
+      query MyQuery {
+  Pool(where: {id: {_eq: "${id}"}}) {
+    tvlUSD
+  }
+}
+    `;
+//@ts-ignore
+    const result1 = await client.query(tvl_query);
+
+    const feesArr = result0.data.SwapDaily
+    const tvlUSD = result1.data.Pool[0].tvlUSD
+    console.log(result0.data.SwapDaily, result1.data.Pool);
+    
+    const fees24hr = feesArr.reduce((total: number, item: any) => {
+      return total + parseFloat(item.feesUSD);
+    }, 0);
+
+    // if (tvlUSD && fees24hr) {
+      
+    // }
+    
+    const apr = (((fees24hr) / (parseFloat(tvlUSD))) * 365).toFixed(2)
+    
+    return res.status(200).json({
+      data: {
+        pool: id,
+        apr
+      }
+    })
   } catch (error) {
     const statusCode = 500;
     const message = "Failed to get pool snapshot";

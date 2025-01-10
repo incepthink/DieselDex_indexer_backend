@@ -4,7 +4,7 @@ import { getPools, getPoolSnapshotsById, getPoolsBylpId } from "../controllers/p
 const router = Router();
 
 router.get("/", getPools);
-// router.get("/:id", getPoolSnapshotsById);
+router.get("/id/:id", getPoolSnapshotsById);
 router.post('/lp', getPoolsBylpId)
 
 export default router;
