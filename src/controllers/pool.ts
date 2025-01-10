@@ -70,7 +70,8 @@ const getPools = async (
     const result = await client.query(pools_query);
 
     const pools = result.data.Pool;
-
+    console.log(pools);
+    
     
 
     // add pools
