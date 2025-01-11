@@ -3,7 +3,12 @@ import { Pool } from "../models";
 import { CustomError } from "../utils/error_factory";
 import { client } from "..";
 import { NextFunction, Request, Response } from "express";
-import { addPool, aggregatePoolFeesAndVolume, populatePool, SwapDaily } from "../functions/pool";
+import {
+  addPool,
+  aggregatePoolFeesAndVolume,
+  populatePool,
+  SwapDaily,
+} from "../functions/pool";
 
 const getPoolsBylpId = async (
   req: Request,
@@ -12,24 +17,23 @@ const getPoolsBylpId = async (
 ): Promise<any> => {
   try {
     console.log(req.body.ids);
-    
-    const lpIds = req.body.ids
+
+    const lpIds = req.body.ids;
     console.log(lpIds);
-    
 
-  const toSend = []
-  for (const lpId of lpIds) {
-    const pool = await Pool.findOne({
-      where: {
-        lpId: lpId
-      }
-    })
-    toSend.push(pool)
-  }
+    const toSend = [];
+    for (const lpId of lpIds) {
+      const pool = await Pool.findOne({
+        where: {
+          lpId: lpId,
+        },
+      });
+      toSend.push(pool);
+    }
 
-  res.status(200).json({
-    pools: toSend
-  })
+    res.status(200).json({
+      pools: toSend,
+    });
   } catch (error) {
     const statusCode = 500;
     const message = "Failed to get pools by lp";
@@ -38,7 +42,7 @@ const getPoolsBylpId = async (
       new CustomError(message, statusCode, { context: "getPoolsBylpId", error })
     );
   }
-}
+};
 
 const getPools = async (
   req: Request,
@@ -60,7 +64,6 @@ const getPools = async (
           is_stable
           tvl
           tvlUSD
-          volume
           lpId
         }
       }
@@ -71,8 +74,6 @@ const getPools = async (
 
     const pools = result.data.Pool;
     console.log(pools);
-    
-    
 
     // add pools
     for (const pool of pools) {
@@ -92,7 +93,7 @@ const getPools = async (
     const feesQuery = gql`
       query MyQuery($time: Int!) {
         SwapDaily(
-          where: { snapshot_time: { _gte: $time }, feesUSD: {_gt: 0} }
+          where: { snapshot_time: { _gte: $time }, feesUSD: { _gt: 0 } }
         ) {
           pool_id
           feesUSD
@@ -104,21 +105,24 @@ const getPools = async (
     const res1 = await client.query(feesQuery, {
       time: yesterdayMidnightTimestamp,
     });
-    
-    const snapshots: SwapDaily[] = res1.data.SwapDaily
-    
-    const poolsWithFees = aggregatePoolFeesAndVolume(snapshots)
-    
+
+    const snapshots: SwapDaily[] = res1.data.SwapDaily;
+
+    const poolsWithFees = aggregatePoolFeesAndVolume(snapshots);
+
     const updatedPools: any[] = [];
     for (const pool of poolsWithFees) {
-      const updatedPool = await Pool.update({
-        fees24hr: pool.fees24hr,
-        volume24hr: pool.volume24hr
-      }, {
-        where: {
-          pool_id: pool.pool_id
+      const updatedPool = await Pool.update(
+        {
+          fees24hr: pool.fees24hr,
+          volume24hr: pool.volume24hr,
         },
-      })
+        {
+          where: {
+            pool_id: pool.pool_id,
+          },
+        }
+      );
     }
 
     // Populate with assets
@@ -179,29 +183,29 @@ const getPoolSnapshotsById = async (
   }
 }
     `;
-//@ts-ignore
+    //@ts-ignore
     const result1 = await client.query(tvl_query);
 
-    const feesArr = result0.data.SwapDaily
-    const tvlUSD = result1.data.Pool[0].tvlUSD
+    const feesArr = result0.data.SwapDaily;
+    const tvlUSD = result1.data.Pool[0].tvlUSD;
     console.log(result0.data.SwapDaily, result1.data.Pool);
-    
+
     const fees24hr = feesArr.reduce((total: number, item: any) => {
       return total + parseFloat(item.feesUSD);
     }, 0);
 
     // if (tvlUSD && fees24hr) {
-      
+
     // }
-    
-    const apr = (((fees24hr) / (parseFloat(tvlUSD))) * 365).toFixed(2)
-    
+
+    const apr = ((fees24hr / parseFloat(tvlUSD)) * 365).toFixed(2);
+
     return res.status(200).json({
       data: {
         pool: id,
-        apr
-      }
-    })
+        apr,
+      },
+    });
   } catch (error) {
     const statusCode = 500;
     const message = "Failed to get pool snapshot";
@@ -239,7 +243,7 @@ const updatePoolsFees = async (
     const feesQuery = gql`
       query MyQuery($time: Int!) {
         SwapDaily(
-          where: { snapshot_time: { _gte: $time }, feesUSD: {_gt: 0} }
+          where: { snapshot_time: { _gte: $time }, feesUSD: { _gt: 0 } }
         ) {
           pool_id
           feesUSD
@@ -251,24 +255,31 @@ const updatePoolsFees = async (
     const result = await client.query(feesQuery, {
       time: yesterdayMidnightTimestamp,
     });
-    
-    const snapshots: SwapDaily[] = result.data.SwapDaily
-    
-    const poolsWithFees = aggregatePoolFeesAndVolume(snapshots)
-    
+
+    const snapshots: SwapDaily[] = result.data.SwapDaily;
+
+    const poolsWithFees = aggregatePoolFeesAndVolume(snapshots);
+
     const updatedPools: any[] = [];
     for (const pool of poolsWithFees) {
-      const updatedPool = await Pool.update({
-        fees24hr: pool.fees24hr,
-        volume24hr: pool.volume24hr
-      }, {
-        where: {
-          pool_id: pool.pool_id
+      const updatedPool = await Pool.update(
+        {
+          fees24hr: pool.fees24hr,
+          volume24hr: pool.volume24hr,
         },
-      })
+        {
+          where: {
+            pool_id: pool.pool_id,
+          },
+        }
+      );
 
       // TODO Response is not right
-      updatedPools.push({pool_id: pool.pool_id, fees24hr: pool.fees24hr, volume24hr: pool.volume24hr})
+      updatedPools.push({
+        pool_id: pool.pool_id,
+        fees24hr: pool.fees24hr,
+        volume24hr: pool.volume24hr,
+      });
     }
 
     return res.json({
