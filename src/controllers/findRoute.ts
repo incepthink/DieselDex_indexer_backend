@@ -199,6 +199,55 @@ async function checkFuelRoute(sellAssetId: string, buyAssetId: string) {
   return null; // No route through Fuel
 }
 
+const getDirectRoute = async (
+  sellAssetId: string,
+  buyAssetId: string,
+  amount: number,
+  tradeType: string,
+  toSend: any
+) => {
+  const ethereumAssetId =
+    "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+
+  if (sellAssetId === ethereumAssetId) {
+    // Check if there's a pool between sellAssetId and Ethereum
+    const sellToEthereumPool = await Pool.findOne({
+      where: {
+        [Op.or]: [
+          { asset_0: buyAssetId, asset_1: ethereumAssetId },
+          { asset_0: ethereumAssetId, asset_1: buyAssetId },
+        ],
+      },
+    });
+
+    if (sellToEthereumPool) {
+      const path0 = [];
+      path0.push(buyAssetId, ethereumAssetId, sellToEthereumPool.is_stable);
+
+      toSend.path.push(path0);
+      return true;
+    }
+  } else if (buyAssetId === ethereumAssetId) {
+    // Check if there's a pool between buyAssetId and Ethereum
+    const buyToEthereumPool = await Pool.findOne({
+      where: {
+        [Op.or]: [
+          { asset_0: sellAssetId, asset_1: ethereumAssetId },
+          { asset_0: ethereumAssetId, asset_1: sellAssetId },
+        ],
+      },
+    });
+    if (buyToEthereumPool) {
+      const path0 = [];
+      path0.push(sellAssetId, ethereumAssetId, buyToEthereumPool.is_stable);
+
+      toSend.path.push(path0);
+      return true;
+    }
+  }
+  return false;
+};
+
 const getSwapRoute = async (
   req: Request,
   res: Response,
@@ -221,6 +270,18 @@ const getSwapRoute = async (
       path: [],
     };
 
+    routingRoute = await getDirectRoute(
+      sellAssetId,
+      buyAssetId,
+      amount,
+      tradeType,
+      toSend
+    );
+
+    if (routingRoute) {
+      return res.status(200).json(toSend);
+    }
+
     routingRoute = await checkEthereumRoute(
       sellAssetId,
       buyAssetId,
@@ -228,7 +289,6 @@ const getSwapRoute = async (
       tradeType,
       toSend
     );
-    console.log(routingRoute, toSend);
 
     if (routingRoute) {
       return res.status(200).json(toSend);
