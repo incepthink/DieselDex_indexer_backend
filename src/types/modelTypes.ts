@@ -13,6 +13,7 @@ export type PoolType = {
   lpId: string;
   fees24hr: number;
   volume24hr: number;
+  swapVolume: number;
 };
 
 export type AssetType = {

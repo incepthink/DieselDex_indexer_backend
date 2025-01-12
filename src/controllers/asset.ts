@@ -18,9 +18,8 @@ const getAssets = async (
   try {
     const asset_query = gql`
       query MyQuery {
-        Asset(limit: 100) {
+        Asset {
           id
-          price_usd
         }
       }
     `;
@@ -32,7 +31,6 @@ const getAssets = async (
     assetsPrice.forEach(async (asset: AssetResponse) => {
       const toAdd = {
         asset_id: asset.id,
-        price_usd: asset.price_usd,
       };
 
       const [assetDB, created] = await Asset.findOrCreate({
@@ -42,9 +40,9 @@ const getAssets = async (
         defaults: toAdd,
       });
 
-      if (!created) {
-        assetDB.price_usd = asset.price_usd;
-      }
+      // if (!created) {
+      //   assetDB.price_usd = asset.price_usd;
+      // }
 
       assetDB.save();
     });

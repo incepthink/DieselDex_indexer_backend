@@ -57,7 +57,8 @@ Pool.init(
     tvlUSD: DataTypes.FLOAT,
     lpId: DataTypes.STRING,
     fees24hr: DataTypes.FLOAT,
-  volume24hr: DataTypes.FLOAT,
+    volume24hr: DataTypes.FLOAT,
+    swapVolume: DataTypes.FLOAT,
   },
   {
     sequelize,

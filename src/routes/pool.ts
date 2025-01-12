@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { getPools, getPoolSnapshotsById, getPoolsBylpId } from "../controllers/pool";
+import { getPools, getPoolsBylpId, getPoolAprById } from "../controllers/pool";
 
 const router = Router();
 
 router.get("/", getPools);
-router.get("/id/:id", getPoolSnapshotsById);
-router.post('/lp', getPoolsBylpId)
+router.post("/lp", getPoolsBylpId);
+router.get("/apr/:id", getPoolAprById);
 
 export default router;

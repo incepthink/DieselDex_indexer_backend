@@ -65,6 +65,7 @@ const getPools = async (
           tvl
           tvlUSD
           lpId
+          swapVolume
         }
       }
     `;
@@ -90,9 +91,11 @@ const getPools = async (
       ) / 1000
     );
 
+    console.log(yesterdayMidnightTimestamp);
+
     const feesQuery = gql`
       query MyQuery($time: Int!) {
-        SwapDaily(
+        SwapHourly(
           where: { snapshot_time: { _gte: $time }, feesUSD: { _gt: 0 } }
         ) {
           pool_id
@@ -106,7 +109,9 @@ const getPools = async (
       time: yesterdayMidnightTimestamp,
     });
 
-    const snapshots: SwapDaily[] = res1.data.SwapDaily;
+    console.log(res1.data);
+
+    const snapshots: SwapDaily[] = res1.data.SwapHourly;
 
     const poolsWithFees = aggregatePoolFeesAndVolume(snapshots);
 
@@ -145,7 +150,7 @@ const getPools = async (
   }
 };
 
-const getPoolSnapshotsById = async (
+const getPoolAprById = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -158,14 +163,14 @@ const getPoolSnapshotsById = async (
       0
     ) / 1000
   );
-
+  // CHANGE STRUCTURE OF ID
   try {
     const id = req.params.id;
     console.log(id);
 
     const fees_query = gql`
         query MyQuery($time: Int!) {
-  SwapDaily(where: {snapshot_time: {_gt: $time}, 
+  SwapHourly(where: {snapshot_time: {_gt: $time}, 
   pool_id: {_eq: "${id}"}}) {
     feesUSD
   }
@@ -185,27 +190,37 @@ const getPoolSnapshotsById = async (
     `;
     //@ts-ignore
     const result1 = await client.query(tvl_query);
+    console.log(result1);
 
-    const feesArr = result0.data.SwapDaily;
-    const tvlUSD = result1.data.Pool[0].tvlUSD;
-    console.log(result0.data.SwapDaily, result1.data.Pool);
+    if (result0.data.SwapHourly && result1.data.Pool[0].tvlUSD) {
+      const feesArr = result0.data.SwapHourly;
+      const tvlUSD = result1.data.Pool[0].tvlUSD;
+      console.log(result0.data.SwapHourly, result1.data.Pool);
 
-    const fees24hr = feesArr.reduce((total: number, item: any) => {
-      return total + parseFloat(item.feesUSD);
-    }, 0);
+      const fees24hr = feesArr.reduce((total: number, item: any) => {
+        return total + parseFloat(item.feesUSD);
+      }, 0);
 
-    // if (tvlUSD && fees24hr) {
+      // if (tvlUSD && fees24hr) {
 
-    // }
+      // }
 
-    const apr = ((fees24hr / parseFloat(tvlUSD)) * 365).toFixed(2);
+      const apr = ((fees24hr / parseFloat(tvlUSD)) * 365).toFixed(2);
 
-    return res.status(200).json({
-      data: {
-        pool: id,
-        apr,
-      },
-    });
+      return res.status(200).json({
+        data: {
+          pool: id,
+          apr,
+        },
+      });
+    } else {
+      return res.status(200).json({
+        data: {
+          pool: id,
+          apr: 0,
+        },
+      });
+    }
   } catch (error) {
     const statusCode = 500;
     const message = "Failed to get pool snapshot";
@@ -298,4 +313,4 @@ const updatePoolsFees = async (
   }
 };
 
-export { getPools, getPoolSnapshotsById, updatePoolsFees, getPoolsBylpId };
+export { getPools, getPoolAprById, updatePoolsFees, getPoolsBylpId };

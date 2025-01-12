@@ -15,6 +15,7 @@ class Pool extends Model<InferAttributes<Pool>, InferCreationAttributes<Pool>> {
   declare lpId: string;
   declare fees24hr: number;
   declare volume24hr: number;
+  declare swapVolume: number;
 }
 
 export default Pool;

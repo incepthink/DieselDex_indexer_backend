@@ -12,7 +12,7 @@ class Asset extends Model<
   declare l1_address?: string;
   declare contract_id?: string;
   declare subId?: string;
-  declare price_usd: number;
+  declare price_usd?: number;
   declare is_verified?: boolean;
 }
 

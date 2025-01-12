@@ -7,8 +7,8 @@ import sequelize from "./models";
 import { Client, cacheExchange, fetchExchange } from "@urql/core";
 
 export const client = new Client({
-  url: "https://indexer.dev.hyperindex.xyz/e0bfe54/v1/graphql",
-  exchanges: [cacheExchange, fetchExchange],
+  url: "https://indexer.dev.hyperindex.xyz/4ce792e/v1/graphql",
+  exchanges: [fetchExchange],
 });
 
 dotenv.config();

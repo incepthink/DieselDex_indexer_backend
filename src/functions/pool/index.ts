@@ -22,7 +22,7 @@ export const populatePool = async (pool: any, next: NextFunction) => {
   });
 
   return newPoolWithAssets;
-}
+};
 
 export const addPool = async (pool: PoolType, next: NextFunction) => {
   try {
@@ -40,7 +40,8 @@ export const addPool = async (pool: PoolType, next: NextFunction) => {
       tvlUSD: pool.tvlUSD,
       lpId: pool.lpId,
       fees24hr: 0,
-      volume24hr: 0
+      volume24hr: 0,
+      swapVolume: pool.swapVolume,
     };
 
     const [newPool, created] = await Pool.findOrCreate({
@@ -57,6 +58,7 @@ export const addPool = async (pool: PoolType, next: NextFunction) => {
       newPool.tvl = pool.tvl;
       newPool.tvlUSD = pool.tvlUSD;
       newPool.lpId = pool.lpId;
+      newPool.swapVolume = pool.swapVolume;
     }
 
     newPool.save();
@@ -74,7 +76,7 @@ export interface SwapDaily {
   pool_id: string;
   feesUSD: string;
   volume: string; // Added field for volume
-  __typename: 'SwapDaily';
+  __typename: "SwapDaily";
 }
 
 interface PoolVolumeAndFees {
@@ -90,7 +92,9 @@ interface VolumeAndFeesAggregator {
   };
 }
 
-export function aggregatePoolFeesAndVolume(data: SwapDaily[]): PoolVolumeAndFees[] {
+export function aggregatePoolFeesAndVolume(
+  data: SwapDaily[]
+): PoolVolumeAndFees[] {
   // Create an object to store the aggregated fees and volumes
   const aggregator: VolumeAndFeesAggregator = {};
 
@@ -110,11 +114,13 @@ export function aggregatePoolFeesAndVolume(data: SwapDaily[]): PoolVolumeAndFees
   });
 
   // Convert the object to array of objects with desired structure
-  const result: PoolVolumeAndFees[] = Object.entries(aggregator).map(([poolId, data]) => ({
-    pool_id: poolId,
-    fees24hr: data.fees,
-    volume24hr: data.volume,
-  }));
+  const result: PoolVolumeAndFees[] = Object.entries(aggregator).map(
+    ([poolId, data]) => ({
+      pool_id: poolId,
+      fees24hr: data.fees,
+      volume24hr: data.volume,
+    })
+  );
 
   // Sort by volume24hr first, then by fees24hr if volumes are the same
   result.sort((a, b) => b.volume24hr - a.volume24hr || b.fees24hr - a.fees24hr);
