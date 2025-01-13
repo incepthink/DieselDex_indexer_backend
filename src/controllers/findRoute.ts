@@ -199,6 +199,55 @@ async function checkFuelRoute(sellAssetId: string, buyAssetId: string) {
   return null; // No route through Fuel
 }
 
+// const getDirectRoute = async (
+//   sellAssetId: string,
+//   buyAssetId: string,
+//   amount: number,
+//   tradeType: string,
+//   toSend: any
+// ) => {
+//   const ethereumAssetId =
+//     "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+
+//   if (sellAssetId === ethereumAssetId) {
+//     // Check if there's a pool between sellAssetId and Ethereum
+//     const sellToEthereumPool = await Pool.findOne({
+//       where: {
+//         [Op.or]: [
+//           { asset_0: buyAssetId, asset_1: ethereumAssetId },
+//           { asset_0: ethereumAssetId, asset_1: buyAssetId },
+//         ],
+//       },
+//     });
+
+//     if (sellToEthereumPool) {
+//       const path0 = [];
+//       path0.push(buyAssetId, ethereumAssetId, sellToEthereumPool.is_stable);
+
+//       toSend.path.push(path0);
+//       return true;
+//     }
+//   } else if (buyAssetId === ethereumAssetId) {
+//     // Check if there's a pool between buyAssetId and Ethereum
+//     const buyToEthereumPool = await Pool.findOne({
+//       where: {
+//         [Op.or]: [
+//           { asset_0: sellAssetId, asset_1: ethereumAssetId },
+//           { asset_0: ethereumAssetId, asset_1: sellAssetId },
+//         ],
+//       },
+//     });
+//     if (buyToEthereumPool) {
+//       const path0 = [];
+//       path0.push(sellAssetId, ethereumAssetId, buyToEthereumPool.is_stable);
+
+//       toSend.path.push(path0);
+//       return true;
+//     }
+//   }
+//   return false;
+// };
+
 const getDirectRoute = async (
   sellAssetId: string,
   buyAssetId: string,
@@ -206,46 +255,28 @@ const getDirectRoute = async (
   tradeType: string,
   toSend: any
 ) => {
-  const ethereumAssetId =
-    "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+  const directPool = await Pool.findOne({
+    where: {
+      [Op.or]: [
+        { asset_0: sellAssetId, asset_1: buyAssetId },
+        { asset_0: buyAssetId, asset_1: sellAssetId },
+      ],
+    },
+  });
 
-  if (sellAssetId === ethereumAssetId) {
-    // Check if there's a pool between sellAssetId and Ethereum
-    const sellToEthereumPool = await Pool.findOne({
-      where: {
-        [Op.or]: [
-          { asset_0: buyAssetId, asset_1: ethereumAssetId },
-          { asset_0: ethereumAssetId, asset_1: buyAssetId },
-        ],
-      },
-    });
+  console.log(directPool);
 
-    if (sellToEthereumPool) {
-      const path0 = [];
-      path0.push(buyAssetId, ethereumAssetId, sellToEthereumPool.is_stable);
+  console.log("HISDHSDFJHDFJBSHFIUBF");
 
-      toSend.path.push(path0);
-      return true;
-    }
-  } else if (buyAssetId === ethereumAssetId) {
-    // Check if there's a pool between buyAssetId and Ethereum
-    const buyToEthereumPool = await Pool.findOne({
-      where: {
-        [Op.or]: [
-          { asset_0: sellAssetId, asset_1: ethereumAssetId },
-          { asset_0: ethereumAssetId, asset_1: sellAssetId },
-        ],
-      },
-    });
-    if (buyToEthereumPool) {
-      const path0 = [];
-      path0.push(sellAssetId, ethereumAssetId, buyToEthereumPool.is_stable);
+  if (directPool) {
+    const path0 = [];
+    path0.push(directPool.asset_0, directPool.asset_1, directPool.is_stable);
 
-      toSend.path.push(path0);
-      return true;
-    }
+    toSend.path.push(path0);
+    return true;
+  } else {
+    return false;
   }
-  return false;
 };
 
 const getSwapRoute = async (
