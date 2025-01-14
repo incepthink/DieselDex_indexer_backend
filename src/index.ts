@@ -7,7 +7,7 @@ import sequelize from "./models";
 import { Client, cacheExchange, fetchExchange } from "@urql/core";
 
 export const client = new Client({
-  url: "https://indexer.dev.hyperindex.xyz/4ce792e/v1/graphql",
+  url: "https://indexer.dev.hyperindex.xyz/a21c09c/v1/graphql",
   exchanges: [fetchExchange],
 });
 
