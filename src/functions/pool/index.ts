@@ -5,8 +5,14 @@ import { gql } from "urql";
 import { client } from "../..";
 import { PoolType } from "../../types/modelTypes";
 
-export const populatePool = async (pool: any, next: NextFunction) => {
-  const newPoolWithAssets = await Pool.findByPk(pool.id, {
+export const populatePool = async (
+  pool: any,
+  db: boolean,
+  next: NextFunction
+) => {
+  const id = db ? pool.pool_id : pool.id;
+
+  const newPoolWithAssets = await Pool.findByPk(id, {
     include: [
       {
         model: Asset,

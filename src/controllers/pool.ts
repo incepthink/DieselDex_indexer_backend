@@ -44,6 +44,37 @@ const getPoolsBylpId = async (
   }
 };
 
+const getPoolsDb = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const pools = await Pool.findAll();
+    console.log(pools);
+
+    const toSend = [];
+    for (const pool of pools) {
+      let dbPool = await populatePool(pool, true, next);
+
+      toSend.push(dbPool);
+    }
+
+    console.log(toSend);
+
+    res.status(200).json({
+      success: toSend,
+    });
+  } catch (error) {
+    const statusCode = 500;
+    const message = "Failed to get pools";
+
+    return next(
+      new CustomError(message, statusCode, { context: "getPools", error })
+    );
+  }
+};
+
 const getPools = async (
   req: Request,
   res: Response,
@@ -95,9 +126,7 @@ const getPools = async (
 
     const feesQuery = gql`
       query MyQuery($time: Int!) {
-        SwapHourly(
-          where: { snapshot_time: { _gte: $time }, feesUSD: { _gt: 0 } }
-        ) {
+        SwapHourly(where: { snapshot_time: { _gte: $time } }) {
           pool_id
           feesUSD
           volume
@@ -108,8 +137,6 @@ const getPools = async (
     const res1 = await client.query(feesQuery, {
       time: yesterdayMidnightTimestamp,
     });
-
-    console.log(res1.data);
 
     const snapshots: SwapDaily[] = res1.data.SwapHourly;
 
@@ -134,7 +161,7 @@ const getPools = async (
 
     const toSend = [];
     for (const pool of pools) {
-      let dbPool = await populatePool(pool, next);
+      let dbPool = await populatePool(pool, false, next);
 
       toSend.push(dbPool);
     }
@@ -313,4 +340,10 @@ const updatePoolsFees = async (
   }
 };
 
-export { getPools, getPoolAprById, updatePoolsFees, getPoolsBylpId };
+export {
+  getPools,
+  getPoolAprById,
+  updatePoolsFees,
+  getPoolsBylpId,
+  getPoolsDb,
+};
