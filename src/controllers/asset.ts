@@ -10,6 +10,45 @@ type AssetResponse = {
   price_usd: number;
 };
 
+const getExchangeRateByAssetId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { id } = req.body;
+
+    const exchangeRateQuery = gql`
+      query MyQuery {
+    Asset(where: {id: {_eq: "${id}"}}) {
+      id
+      exchange_rate_eth
+      exchange_rate_fuel
+      exchange_rate_usdc
+    }
+  }
+    `;
+
+    //@ts-ignore
+    const result = await client.query(exchangeRateQuery);
+    const data = result.data.Asset[0];
+
+    res.status(200).json({
+      data,
+    });
+  } catch (error) {
+    const statusCode = 500;
+    const message = "Failed to get asset exchange rate";
+
+    return next(
+      new CustomError(message, statusCode, {
+        context: "getExchangeRateByAssetId",
+        error,
+      })
+    );
+  }
+};
+
 const getAssets = async (
   req: Request,
   res: Response,
@@ -111,4 +150,4 @@ const getAssetById = async (
   }
 };
 
-export { getAssets, addAssets, getAssetById };
+export { getAssets, addAssets, getAssetById, getExchangeRateByAssetId };
