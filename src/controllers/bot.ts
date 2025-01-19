@@ -45,11 +45,14 @@ const sendDataToBot = async (
 
       const data = await getBotData(asset_0, asset_1, extraTx, id);
 
-      const botCall = await axios.post("https://dieselbot.onrender.com/echo", {
-        data,
-      });
-
-      console.log("Bot call", botCall.data);
+      if (data?.eth_in !== 0 && data?.asset_out !== 0) {
+        const botCall = await axios.post(
+          "https://dieselbot.onrender.com/echo",
+          {
+            data,
+          }
+        );
+      }
 
       return res.status(200).json({
         data,
