@@ -105,7 +105,6 @@ const getPools = async (
     const result = await client.query(pools_query);
 
     const pools = result.data.Pool;
-    console.log(pools);
 
     // add pools
     for (const pool of pools) {
@@ -121,8 +120,6 @@ const getPools = async (
         0
       ) / 1000
     );
-
-    console.log(yesterdayMidnightTimestamp);
 
     const feesQuery = gql`
       query MyQuery($time: Int!) {
@@ -193,46 +190,12 @@ const getPoolAprById = async (
   // CHANGE STRUCTURE OF ID
   try {
     const id = req.params.id;
-    console.log(id);
 
-    const fees_query = gql`
-        query MyQuery($time: Int!) {
-  SwapHourly(where: {snapshot_time: {_gt: $time}, 
-  pool_id: {_eq: "${id}"}}) {
-    feesUSD
-  }
-}
-      `;
+    const pool = await Pool.findByPk(id);
 
-    const result0 = await client.query(fees_query, {
-      time: yesterdayMidnightTimestamp,
-    });
-
-    const tvl_query = gql`
-      query MyQuery {
-  Pool(where: {id: {_eq: "${id}"}}) {
-    tvlUSD
-  }
-}
-    `;
-    //@ts-ignore
-    const result1 = await client.query(tvl_query);
-    console.log(result1);
-
-    if (result0.data.SwapHourly && result1.data.Pool[0].tvlUSD) {
-      const feesArr = result0.data.SwapHourly;
-      const tvlUSD = result1.data.Pool[0].tvlUSD;
-      console.log(result0.data.SwapHourly, result1.data.Pool);
-
-      const fees24hr = feesArr.reduce((total: number, item: any) => {
-        return total + parseFloat(item.feesUSD);
-      }, 0);
-
-      // if (tvlUSD && fees24hr) {
-
-      // }
-
-      const apr = ((fees24hr / parseFloat(tvlUSD)) * 365).toFixed(2);
+    if (pool) {
+      const feeRate = pool.is_stable ? 0.05 : 0.3;
+      const apr = (pool.volume24hr * feeRate * 365) / pool.tvlUSD;
 
       return res.status(200).json({
         data: {

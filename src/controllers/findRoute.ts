@@ -264,10 +264,6 @@ const getDirectRoute = async (
     },
   });
 
-  console.log(directPool);
-
-  console.log("HISDHSDFJHDFJBSHFIUBF");
-
   if (directPool) {
     const path0 = [];
     path0.push(directPool.asset_0, directPool.asset_1, directPool.is_stable);
@@ -291,7 +287,6 @@ const getSwapRoute = async (
       amount,
       trade_type: tradeType,
     } = req.body;
-    console.log(req.body);
 
     let routingRoute;
 

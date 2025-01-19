@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@types/chalk": "^0.4.31",
+    "axios": "^1.7.9",
     "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
