@@ -10,7 +10,7 @@ const formatNumber = (num: number) => {
   } else if (num >= 1_000) {
     return (num / 1_000).toFixed(1) + "K";
   }
-  return num.toFixed(2); // For smaller numbers
+  return num; // For smaller numbers
 };
 
 const getHomeData = async (
@@ -19,21 +19,18 @@ const getHomeData = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const tradersQuery = gql`
+    const tradesQuery = gql`
       query MyQuery {
-        Transaction(
-          where: { transaction_type: { _eq: "SWAP" } }
-          distinct_on: initiator
-        ) {
+        Transaction {
           id
         }
       }
     `;
 
     //@ts-ignore
-    const result = await client.query(tradersQuery);
+    const result = await client.query(tradesQuery);
 
-    const traders = result.data.Transaction.length;
+    const trades = result.data.Transaction.length;
 
     const pools = await Pool.findAll();
     const { totalTvlUSD, totalSwapVolume } = pools.reduce(
@@ -48,11 +45,12 @@ const getHomeData = async (
 
     const formatTvlUsd = formatNumber(totalTvlUSD);
     const formatVol = formatNumber(totalSwapVolume);
+    const formatTrades = formatNumber(trades);
 
     res.status(200).json({
       totalTvlUsd: formatTvlUsd,
       totalVol: formatVol,
-      traders,
+      trades: formatTrades,
     });
   } catch (error) {
     const statusCode = 500;
