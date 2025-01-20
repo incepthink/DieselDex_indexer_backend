@@ -275,6 +275,11 @@ const getDirectRoute = async (
   }
 };
 
+const USDC_ID =
+  "0x286c479da40dc953bddc3bb4c453b608bba2e0ac483b077bd475174115395e6b";
+const FUEL_ID =
+  "0x1d5d97005e41cae2187a895fd8eab0506111e0e2f3331cd3912c15c24e3c1d82";
+
 const getSwapRoute = async (
   req: Request,
   res: Response,
@@ -296,13 +301,20 @@ const getSwapRoute = async (
       path: [],
     };
 
-    routingRoute = await getDirectRoute(
-      sellAssetId,
-      buyAssetId,
-      amount,
-      tradeType,
-      toSend
-    );
+    if (
+      !(
+        (buyAssetId === USDC_ID && sellAssetId === FUEL_ID) ||
+        (buyAssetId === FUEL_ID && sellAssetId === USDC_ID)
+      )
+    ) {
+      routingRoute = await getDirectRoute(
+        sellAssetId,
+        buyAssetId,
+        amount,
+        tradeType,
+        toSend
+      );
+    }
 
     if (routingRoute) {
       return res.status(200).json(toSend);
