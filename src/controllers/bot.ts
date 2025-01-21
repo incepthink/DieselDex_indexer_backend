@@ -5,6 +5,9 @@ import { CustomError } from "../utils/error_factory";
 import { getBotData } from "../functions/bot";
 import axios from "axios";
 
+const PSYCHO_ID =
+  "0x86fa05e9fef64f76fa61c03f5906c87a03cb9148120b6171910566173d36fc9e";
+
 const sendDataToBot = async (
   req: Request,
   res: Response,
@@ -52,6 +55,15 @@ const sendDataToBot = async (
             data,
           }
         );
+
+        if (asset_0 === PSYCHO_ID || asset_1 === PSYCHO_ID) {
+          const botCallPsycho = await axios.post(
+            "https://dieselbot.onrender.com/echo-bot2",
+            {
+              data,
+            }
+          );
+        }
       }
 
       return res.status(200).json({
@@ -62,11 +74,23 @@ const sendDataToBot = async (
 
       const data = await getBotData(asset_0, asset_1, transaction, id);
 
-      const botCall = await axios.post("https://dieselbot.onrender.com/echo", {
-        data,
-      });
+      if (data?.eth_in !== 0 && data?.asset_out !== 0) {
+        const botCall = await axios.post(
+          "https://dieselbot.onrender.com/echo",
+          {
+            data,
+          }
+        );
 
-      console.log("Bot call", botCall.data);
+        if (asset_0 === PSYCHO_ID || asset_1 === PSYCHO_ID) {
+          const botCallPsycho = await axios.post(
+            "https://dieselbot.onrender.com/echo-bot2",
+            {
+              data,
+            }
+          );
+        }
+      }
 
       return res.status(200).json({
         data,
