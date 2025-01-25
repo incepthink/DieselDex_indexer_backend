@@ -2,6 +2,7 @@ import dbConfig from "../config/config.json";
 import { DataTypes, Sequelize } from "sequelize";
 import Pool from "./pool";
 import Asset from "./asset";
+import Transaction from "./transaction";
 
 const sequelize = new Sequelize(
   dbConfig.development.database,
@@ -64,6 +65,33 @@ Pool.init(
     sequelize,
     modelName: "Pool",
     tableName: "pools",
+  }
+);
+
+Transaction.init(
+  {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      unique: true,
+    },
+    transaction_type: DataTypes.STRING,
+    pool_id: DataTypes.STRING,
+    initiator: DataTypes.STRING,
+    is_contract_initiator: DataTypes.BOOLEAN,
+    asset_0_in: DataTypes.BIGINT,
+    asset_0_out: DataTypes.BIGINT,
+    asset_1_in: DataTypes.BIGINT,
+    asset_1_out: DataTypes.BIGINT,
+    block_time: DataTypes.INTEGER,
+    extra: DataTypes.STRING,
+    lp_id: DataTypes.STRING,
+    lp_amount: DataTypes.STRING,
+  },
+  {
+    sequelize,
+    modelName: "Transaction",
+    tableName: "transactions",
   }
 );
 

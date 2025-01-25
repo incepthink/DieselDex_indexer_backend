@@ -25,6 +25,7 @@ export const getBotData = async (
     };
   } else if (asset_1 === ETH_ID) {
     const eth_in = tx.asset_1_in / 10 ** 9;
+    console.log(eth_in);
 
     const asset_bought = await Asset.findByPk(asset_0, {
       attributes: ["asset_id", "name", "symbol", "decimals", "icon"],
