@@ -1,9 +1,9 @@
 {
   "development": {
     "username": "root",
-    "password": "Shoaib2580",
-    "database": "indexer",
-    "host": "127.0.0.1",
+    "password": "bNrdqQaUvdFMlwtpTyBhkduCVVBbvkjD",
+    "database": "railway",
+    "host": "mysql.railway.internal",
     "port": 3306,
     "dialect": "mysql",
     "logging": false
