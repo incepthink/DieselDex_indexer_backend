@@ -5,6 +5,7 @@ import initializeRoutes from "./routes";
 import { CustomError } from "./utils/error_factory";
 import sequelize from "./models";
 import { Client, cacheExchange, fetchExchange } from "@urql/core";
+import { loadAssetData } from "./functions/asset";
 
 export const client = new Client({
   url: "https://indexer.dev.hyperindex.xyz/be01a0c/v1/graphql",
@@ -53,6 +54,7 @@ const server = app.listen(port, async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync();
+    await loadAssetData();
     console.info("⚡️[server]: Server is running at http://localhost:", port);
   } catch (error) {
     console.error("Unable to connect to the database:", error);
