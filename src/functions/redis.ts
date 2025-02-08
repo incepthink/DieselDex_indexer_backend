@@ -2,6 +2,8 @@ import Redis from "ioredis";
 
 class RedisSingleton {
   constructor() {
+    console.log("ENV", process.env.REDIS_URL);
+
     //@ts-ignore
     if (!RedisSingleton.instance) {
       try {
