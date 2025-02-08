@@ -4,8 +4,12 @@ class RedisSingleton {
   constructor() {
     //@ts-ignore
     if (!RedisSingleton.instance) {
-      //@ts-ignore
-      RedisSingleton.instance = new Redis(process.env.REDIS_URL);
+      try {
+        //@ts-ignore
+        RedisSingleton.instance = new Redis(process.env.REDIS_URL);
+      } catch (error) {
+        console.log("redis error", error);
+      }
     }
   }
 
