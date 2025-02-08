@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "root",
-    "password": "bNrdqQaUvdFMlwtpTyBhkduCVVBbvkjD",
-    "database": "railway",
-    "host": "mysql.railway.internal",
+    "username": "sql12761777",
+    "password": "zAwIrAi6za",
+    "database": "sql12761777",
+    "host": "sql12.freesqldatabase.com",
     "port": 3306,
     "dialect": "mysql",
     "logging": false
