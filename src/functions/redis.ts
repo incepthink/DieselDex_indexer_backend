@@ -8,7 +8,9 @@ class RedisSingleton {
     if (!RedisSingleton.instance) {
       try {
         //@ts-ignore
-        RedisSingleton.instance = new Redis(process.env.REDIS_URL);
+        RedisSingleton.instance = new Redis(
+          "redis://default:dl7LqNQbOiazPRJH4KluTQ9eCWXN5BHe@redis-17109.crce182.ap-south-1-1.ec2.redns.redis-cloud.com:17109"
+        );
       } catch (error) {
         console.log("redis error", error);
       }

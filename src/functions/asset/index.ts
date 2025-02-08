@@ -155,7 +155,9 @@ export const getPriceFromRedis = async (asset_address) => {
 
 export async function getPriceData(address: string) {
   // add in env
-  const provider = new ethers.JsonRpcProvider(process.env.INFURA_PROVIDER);
+  const provider = new ethers.JsonRpcProvider(
+    "https://mainnet.infura.io/v3/9e5dc0a1ce85450bbe01670918915271"
+  );
   const contract = new ethers.Contract(
     address,
     aggregatorV3InterfaceABI,
