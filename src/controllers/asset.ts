@@ -3,7 +3,7 @@ import { Asset } from "../models";
 import { CustomError } from "../utils/error_factory";
 import { client } from "..";
 import { NextFunction, Request, Response } from "express";
-import { addAsset } from "../functions/asset";
+import { addAsset, getPriceFromRedis, getSupply } from "../functions/asset";
 
 type AssetResponse = {
   id: string;
@@ -150,4 +150,61 @@ const getAssetById = async (
   }
 };
 
-export { getAssets, addAssets, getAssetById, getExchangeRateByAssetId };
+const getAssetPriceByID = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { address } = req.params;
+    const response = await getPriceFromRedis(address);
+    return res.status(200).json({
+      status: "success",
+      data: response,
+    });
+  } catch (error) {
+    const statusCode = 500;
+    const message = "Failed to get asset price by id";
+
+    return next(
+      new CustomError(message, statusCode, {
+        context: "getAssetPriceByID",
+        error,
+      })
+    );
+  }
+};
+
+const getAssetSupplyByID = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { address } = req.params;
+    const response = await getSupply(address);
+    return res.status(200).json({
+      status: "success",
+      data: response,
+    });
+  } catch (error) {
+    const statusCode = 500;
+    const message = "Failed to get asset supply by id";
+
+    return next(
+      new CustomError(message, statusCode, {
+        context: "getAssetSupplyByID",
+        error,
+      })
+    );
+  }
+};
+
+export {
+  getAssets,
+  addAssets,
+  getAssetById,
+  getExchangeRateByAssetId,
+  getAssetPriceByID,
+  getAssetSupplyByID,
+};
