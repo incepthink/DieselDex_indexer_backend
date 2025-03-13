@@ -130,41 +130,63 @@ const updateTransactionsFromIndexer = async (
   res: Response,
   next: NextFunction
 ): Promise<any> => {
+  let hasMore = true;
   try {
-    const transactionQuery = gql`
-      query MyQuery {
-        Transaction {
-          id
-          transaction_type
-          pool_id
-          initiator
-          is_contract_initiator
-          asset_0_in
-          asset_0_out
-          asset_1_in
-          asset_1_out
-          block_time
-          extra
-          lp_id
-          lp_amount
+    let currentOffset = 0;
+    const newTransactions = [];
+
+    while (hasMore) {
+      const transactionQuery = gql`
+        query MyQuery($offset: Int = 0) {
+          Transaction(offset: $offset) {
+            id
+            transaction_type
+            pool_id
+            initiator
+            is_contract_initiator
+            asset_0_in
+            asset_0_out
+            asset_1_in
+            asset_1_out
+            block_time
+            extra
+            lp_id
+            lp_amount
+          }
+        }
+      `;
+
+      //@ts-ignore
+      const result = await client.query(transactionQuery, {
+        offset: currentOffset,
+      });
+
+      const transactions = result.data.Transaction;
+      console.log(hasMore, transactions.length);
+
+      newTransactions.push(...transactions);
+
+      if (transactions && transactions.length > 0) {
+        currentOffset = currentOffset + Number(transactions.length);
+
+        if (Number(transactions.length) < 1000) {
+          hasMore = false;
+        } else {
+          hasMore = true;
         }
       }
-    `;
-
-    //@ts-ignore
-    const result = await client.query(transactionQuery);
-    const transactions = result.data.Transaction;
-
-    await Transaction.bulkCreate(transactions, {
+    }
+    await Transaction.bulkCreate(newTransactions, {
       validate: true, // Validate each transaction object before inserting
       ignoreDuplicates: true, // Ignore duplicate records if needed
     });
 
     res.status(200).json({
       status: "success",
-      message: `${transactions.length} transactions added`,
+      message: `${newTransactions.length} transactions added`,
     });
   } catch (error) {
+    hasMore = false;
     const statusCode = 500;
     const message = "Failed to update transations from indexer";
 

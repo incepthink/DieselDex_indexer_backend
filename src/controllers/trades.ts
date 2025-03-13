@@ -3,6 +3,7 @@ import { getValue, storeValue } from "../functions/redis";
 import { CustomError } from "../utils/error_factory";
 import { convertTradingDataToChartData } from "../functions/trades";
 import { queryDB } from "../utils";
+import { getBotData } from "../functions/bot";
 
 const getTradingData = async (
   pool_id: string,
@@ -45,6 +46,23 @@ const getTradingData = async (
                     time
                     transaction_id
                 }
+
+                Transaction(offset: $offset, where: {pool_id: {_eq: $pool_id}}, limit: $limit, order_by: {time: desc}) {
+                  id
+  transaction_type
+  pool_id
+  initiator
+  is_contract_initiator
+  asset_0_in
+  asset_0_out
+  asset_1_in
+  asset_1_out
+  block_time
+  extra
+  lp_id
+  lp_amount
+  time
+                }
             }
         `;
 
@@ -56,9 +74,47 @@ const getTradingData = async (
 
     try {
       const response = await queryDB(query, variables);
-      console.log(response);
 
       const results = response.data.RawSwapEvent;
+      const transactions = response.data.Transaction;
+
+      const eth_transactions: any = [];
+
+      transactions.forEach(async (transaction: any) => {
+        const isExtra = Boolean(JSON.parse(transaction.extra));
+        if (isExtra) {
+          const extraTx = JSON.parse(transaction.extra)[0];
+          const [asset_0, asset_1, is_stable] = extraTx.pool_id.split("_");
+
+          const data = await getBotData(asset_0, asset_1, extraTx, pool_id);
+
+          if (data?.eth_in !== 0 && data?.asset_out !== 0) {
+            eth_transactions.push(data);
+          }
+        } else {
+          const [asset_0, asset_1, is_stable] = transaction.pool_id.split("_");
+
+          const data = await getBotData(asset_0, asset_1, transaction, pool_id);
+
+          if (data?.eth_in !== 0 && data?.asset_out !== 0) {
+            const [asset_0, asset_1, is_stable] =
+              transaction.pool_id.split("_");
+
+            const data = await getBotData(
+              asset_0,
+              asset_1,
+              transaction,
+              pool_id
+            );
+
+            if (data?.eth_in !== 0 && data?.asset_out !== 0) {
+              eth_transactions.push(data);
+            }
+          }
+        }
+      });
+      // COntinue here for eth amount for chartTransactionHistory
+      console.log("EthTransations::", eth_transactions[0]);
 
       if (results && results.length > 0) {
         allResults.push(...results);
