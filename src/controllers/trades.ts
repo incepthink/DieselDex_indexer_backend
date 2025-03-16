@@ -47,7 +47,7 @@ const getTradingData = async (
                     transaction_id
                 }
 
-                Transaction(offset: $offset, where: {pool_id: {_eq: $pool_id}}, limit: $limit, order_by: {time: desc}) {
+                Transaction(offset: $offset, where: {pool_id: {_eq: $pool_id}}, limit: $limit, order_by: {block_time: desc}) {
                   id
   transaction_type
   pool_id
@@ -61,7 +61,6 @@ const getTradingData = async (
   extra
   lp_id
   lp_amount
-  time
                 }
             }
         `;
@@ -74,6 +73,7 @@ const getTradingData = async (
 
     try {
       const response = await queryDB(query, variables);
+      console.log(response);
 
       const results = response.data.RawSwapEvent;
       const transactions = response.data.Transaction;
