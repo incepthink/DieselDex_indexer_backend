@@ -73,7 +73,7 @@ const getUserTransactionsByAddress = async (
 
     const transactionQuery = gql`
       query MyQuery {
-        Transaction(where: { initiator: { _eq: "${address.toLowerCase()}" } }, limit: 200, offset: 0) {
+        Transaction(where: { initiator: { _eq: "${address.toLowerCase()}" } }, limit: 200, offset: 0, order_by: {block_time: asc}) {
           asset_0_in
           asset_0_out
           asset_1_in
