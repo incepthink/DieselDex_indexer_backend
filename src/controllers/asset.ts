@@ -158,6 +158,7 @@ const getAssetPriceByID = async (
   try {
     const { address } = req.params;
     const response = await getPriceFromRedis(address);
+
     return res.status(200).json({
       status: "success",
       data: response,
