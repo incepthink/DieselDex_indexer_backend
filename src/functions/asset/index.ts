@@ -67,7 +67,7 @@ export async function loadAssetData() {
   return;
 }
 
-export const getPriceFromRedis = async (asset_address) => {
+export const getPriceFromRedis = async (asset_address: string) => {
   console.log("scrapeAssetPrice::", asset_address);
 
   try {
@@ -91,13 +91,15 @@ export const getPriceFromRedis = async (asset_address) => {
   }
 
   const fuel_asset_data = JSON.parse(fuel_assets);
-  const token = fuel_asset_data.find((asset) =>
-    asset.networks.some((network) => {
+  const token = fuel_asset_data.find((asset: any) =>
+    asset.networks.some((network: any) => {
       console.log(network.assetId);
 
       return network.type === "fuel" && network.assetId === asset_address;
     })
   );
+
+  console.log("token::", token);
 
   if (token) {
     if (token.name === "Ethereum") {
@@ -238,17 +240,17 @@ export const getSupply = async (asset_address: string) => {
         bits: asset_address,
       };
 
-      console.log("calling contract1:::");
-      const { supply } = await getContractSupply(
-        contractAddress,
-        asset_address
-      );
+      // console.log("calling contract1:::");
+      // const { supply } = await getContractSupply(
+      //   contractAddress,
+      //   asset_address
+      // );
 
-      console.log("returned supply::", supply);
+      // console.log("returned supply::", supply);
 
-      if (Number(supply) > 0) {
-        return { supply };
-      }
+      // if (Number(supply) > 0) {
+      //   return { supply };
+      // }
 
       //try fuel up contract
 

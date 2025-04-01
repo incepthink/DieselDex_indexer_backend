@@ -30,12 +30,30 @@ const corsOptions: CorsOptions = {
   ],
 };
 
+export const apiKeyAuth = (req: Request, res: Response, next: NextFunction) => {
+  const apiKey = req.header("x-api-key");
+
+  if (!apiKey || apiKey !== process.env.API_KEY) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: Invalid API key",
+    });
+  }
+
+  next();
+};
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World");
+});
+
+app.use((req, res, next) => {
+  if (req.path === "/") return next();
+  apiKeyAuth(req, res, next);
 });
 
 initializeRoutes(app);
