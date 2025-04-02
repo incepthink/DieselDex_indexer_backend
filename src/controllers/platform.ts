@@ -4,6 +4,7 @@ import { Pool } from "../models";
 import { gql } from "urql";
 import { client } from "..";
 import Transaction from "../models/transaction";
+import { Sequelize } from "sequelize";
 
 const formatNumber = (num: number) => {
   if (num >= 1_000_000) {
@@ -14,28 +15,35 @@ const formatNumber = (num: number) => {
   return num; // For smaller numbers
 };
 
+type PoolAggregateResult = {
+  totalTvlUSD: number;
+  totalSwapVolume: number;
+};
+
 const getHomeData = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> => {
   try {
-    const trades = await Transaction.findAll();
+    // Calculate total number of trades directly in the database
+    const totalTrades = await Transaction.count();
 
-    const pools = await Pool.findAll();
-    const { totalTvlUSD, totalSwapVolume } = pools.reduce(
-      (totals, pool) => {
-        const { tvlUSD, swapVolume } = pool;
-        totals.totalTvlUSD += tvlUSD;
-        totals.totalSwapVolume += swapVolume;
-        return totals;
-      },
-      { totalTvlUSD: 0, totalSwapVolume: 0 }
-    );
+    // Aggregate total TVL and swap volume directly in the database
+    const poolAggregates = (await Pool.findAll({
+      attributes: [
+        [Sequelize.fn("SUM", Sequelize.col("tvlUSD")), "totalTvlUSD"],
+        [Sequelize.fn("SUM", Sequelize.col("swapVolume")), "totalSwapVolume"],
+      ],
+      raw: true,
+    })) as unknown as PoolAggregateResult[];
+
+    const totalTvlUSD = poolAggregates[0]?.totalTvlUSD ?? 0;
+    const totalSwapVolume = poolAggregates[0]?.totalSwapVolume ?? 0;
 
     const formatTvlUsd = formatNumber(totalTvlUSD);
     const formatVol = formatNumber(totalSwapVolume);
-    const formatTrades = formatNumber(trades.length);
+    const formatTrades = formatNumber(totalTrades);
 
     res.status(200).json({
       totalTvlUsd: formatTvlUsd,
@@ -129,66 +137,71 @@ const updateTransactionsFromIndexer = async (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<any> => {
-  let hasMore = true;
+) => {
   try {
-    let currentOffset = 0;
-    const newTransactions = [];
+    // Step 1: Identify the most recent transaction in the database
+    const latestTransaction = await Transaction.findOne({
+      order: [["block_time", "DESC"]],
+      attributes: ["block_time"],
+    });
 
-    while (hasMore) {
-      const transactionQuery = gql`
-        query MyQuery($offset: Int = 0) {
-          Transaction(offset: $offset) {
-            id
-            transaction_type
-            pool_id
-            initiator
-            is_contract_initiator
-            asset_0_in
-            asset_0_out
-            asset_1_in
-            asset_1_out
-            block_time
-            extra
-            lp_id
-            lp_amount
-          }
-        }
-      `;
+    const lastBlockTime = latestTransaction ? latestTransaction.block_time : 0;
 
-      //@ts-ignore
-      const result = await client.query(transactionQuery, {
-        offset: currentOffset,
-      });
+    console.log(`🔍 Last processed block time: ${lastBlockTime}`);
 
-      const transactions = result.data.Transaction;
-      console.log(hasMore, transactions.length);
-
-      newTransactions.push(...transactions);
-
-      if (transactions && transactions.length > 0) {
-        currentOffset = currentOffset + Number(transactions.length);
-
-        if (Number(transactions.length) < 1000) {
-          hasMore = false;
-        } else {
-          hasMore = true;
+    // Step 2: Fetch new transactions from the external source
+    const transactionQuery = gql`
+      query FetchTransactions($lastBlockTime: Int!) {
+        Transaction(
+          where: { block_time: { _gt: $lastBlockTime } }
+          order_by: { block_time: asc }
+          limit: 1000
+        ) {
+          id
+          transaction_type
+          pool_id
+          initiator
+          is_contract_initiator
+          asset_0_in
+          asset_0_out
+          asset_1_in
+          asset_1_out
+          block_time
+          extra
+          lp_id
+          lp_amount
         }
       }
+    `;
+
+    const result = await client.query(transactionQuery, {
+      lastBlockTime: lastBlockTime,
+    });
+
+    const transactions = result.data.Transaction;
+
+    if (transactions.length === 0) {
+      res.status(200).json({
+        status: "success",
+        message: "No new transactions to process",
+      });
+      return;
     }
-    await Transaction.bulkCreate(newTransactions, {
-      validate: true, // Validate each transaction object before inserting
-      ignoreDuplicates: true, // Ignore duplicate records if needed
+
+    console.log(`📊 Found ${transactions.length} new transactions to process`);
+
+    // Step 3: Store the new transactions in the database
+    await Transaction.bulkCreate(transactions, {
+      ignoreDuplicates: true, // Ignore duplicate records
     });
 
     res.status(200).json({
       status: "success",
-      message: `${newTransactions.length} transactions added`,
+      message: `${transactions.length} new transactions added`,
     });
   } catch (error) {
-    hasMore = false;
     const statusCode = 500;
-    const message = "Failed to update transations from indexer";
+    const message = "Failed to update transactions from indexer";
 
     return next(
       new CustomError(message, statusCode, {
