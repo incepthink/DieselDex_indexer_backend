@@ -1,17 +1,17 @@
-import dbConfig from "../config/config.json";
+import dbConfig from "../config/config";
 import { DataTypes, Sequelize } from "sequelize";
 import Pool from "./pool";
 import Asset from "./asset";
 import Transaction from "./transaction";
 
 const sequelize = new Sequelize(
-  dbConfig.development.database,
-  dbConfig.development.username,
-  dbConfig.development.password,
+  dbConfig.production.database,
+  dbConfig.production.username,
+  dbConfig.production.password,
   {
-    host: dbConfig.development.host,
+    host: dbConfig.production.host,
     //@ts-ignore
-    dialect: dbConfig.development.dialect,
+    dialect: dbConfig.production.dialect,
   }
 );
 
@@ -36,6 +36,15 @@ Asset.init(
     sequelize,
     modelName: "Asset",
     tableName: "assets",
+    indexes: [
+      {
+        unique: true,
+        fields: ["symbol"],
+      },
+      {
+        fields: ["price_usd"],
+      },
+    ],
   }
 );
 
@@ -65,6 +74,21 @@ Pool.init(
     sequelize,
     modelName: "Pool",
     tableName: "pools",
+    indexes: [
+      {
+        fields: ["asset_0"],
+      },
+      {
+        fields: ["asset_1"],
+      },
+      {
+        fields: ["create_time"],
+      },
+      {
+        unique: true,
+        fields: ["asset_0", "asset_1"],
+      },
+    ],
   }
 );
 
