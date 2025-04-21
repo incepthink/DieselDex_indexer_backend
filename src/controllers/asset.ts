@@ -201,6 +201,27 @@ const getAssetSupplyByID = async (
   }
 };
 
+const getAssetsFromDB = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const assets = await Asset.findAll();
+    return res.status(200).json({ assets });
+  } catch (error) {
+    const statusCode = 500;
+    const message = "Failed to get assets from DB";
+
+    return next(
+      new CustomError(message, statusCode, {
+        context: "getAssetsFromDB",
+        error,
+      })
+    );
+  }
+};
+
 export {
   getAssets,
   addAssets,
@@ -208,4 +229,5 @@ export {
   getExchangeRateByAssetId,
   getAssetPriceByID,
   getAssetSupplyByID,
+  getAssetsFromDB,
 };
