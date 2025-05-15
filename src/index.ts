@@ -8,7 +8,7 @@ import { Client, cacheExchange, fetchExchange } from "@urql/core";
 import { loadAssetData } from "./functions/asset";
 
 export const client = new Client({
-  url: "https://indexer.hyperindex.xyz/bb34868/v1/graphql",
+  url: "https://indexer.dev.hyperindex.xyz/59fa6b1/v1/graphql",
   exchanges: [fetchExchange],
 });
 

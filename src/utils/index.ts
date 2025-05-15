@@ -7,7 +7,7 @@ export async function queryDB(query: string, variables: any) {
   //   }
 
   const response = await fetch(
-    "https://indexer.hyperindex.xyz/bb34868/v1/graphql",
+    "https://indexer.dev.hyperindex.xyz/59fa6b1/v1/graphql",
     {
       method: "POST",
       headers: {
