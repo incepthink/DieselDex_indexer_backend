@@ -3,11 +3,11 @@ import { SingleSrc20Asset } from "./src20";
 
 export async function queryDB(query: string, variables: any) {
   //   if (!process.env.GRAPHQL_URL) {
-  //     throw new Error("http://localhost:8080/v1/graphql");
+  //     throw new Error("https://indexer.dev.hyperindex.xyz/e07e0b8/v1/graphql");
   //   }
 
   const response = await fetch(
-    "https://indexer.dev.hyperindex.xyz/59fa6b1/v1/graphql",
+    "https://indexer.dev.hyperindex.xyz/e07e0b8/v1/graphql",
     {
       method: "POST",
       headers: {
